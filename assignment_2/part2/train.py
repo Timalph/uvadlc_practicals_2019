@@ -37,6 +37,56 @@ import sys
 torch.manual_seed(42)
 np.random.seed(42)
 ################################################################################
+
+def create_zerox(batch_inputs,v, device):
+     batch_input = torch.stack(batch_inputs).to(device)
+     
+     
+     zerox = torch.zeros(batch_input.shape[0],
+                     batch_input.shape[1],
+                     v).to(device)
+     
+     zerox.scatter_(2,batch_input.unsqueeze(2),1).to(device)
+     
+     zerox = zerox.transpose(1,0).to(device)
+
+     return zerox    
+    
+def Temperature_time(epoch, step, dataset, device, model):
+    
+    for temp_value in [0.5,1,2]:
+        output = np.random.randint(dataset.vocab_size)
+        letters = [output]
+        for i in range(config.seq_length -1):
+            soft = torch.nn.Softmax(dim=2)
+         
+            zerol = torch.zeros([1,1,dataset.vocab_size])
+            one_hot_letter = torch.tensor(output).unsqueeze(-1).unsqueeze(-1).unsqueeze(-1)
+            zerol.scatter_(2,one_hot_letter,1)
+            zerol = zerol.to(device)
+            if i == 0:
+                output, h = model.forward(zerol)
+         
+            else:
+                output, h = model.forward(zerol, h)
+             
+            tempered = soft(output/temp_value)
+
+            output = int(torch.multinomial(tempered[0][0],1).detach())
+
+            letters.append(output)
+        the_string =  dataset.convert_to_string(letters)
+        abs_step = (epoch*10000)+step
+         
+        line = ' '.join(('Step:',str(abs_step),'Temperature:'
+                         ,str(temp_value), 'Text:',the_string))
+        print(the_string)
+        with open('Generations.txt', 'a') as file:
+                      file.write(line + '\n')    
+    
+    
+    
+    
 def train(config):
 
     # Initialize the device which to run the model on
@@ -50,188 +100,272 @@ def train(config):
         # Initialize the model that we are going to use
     model = TextGenerationModel(batch_size = config.batch_size,
                                 seq_length = config.seq_length,
-                                vocabulary_size = dataset.vocab_size)  # fixme
+                                vocabulary_size = dataset.vocab_size,
+                                lstm_num_hidden = config.lstm_num_hidden,
+                                lstm_num_layers = config.lstm_num_layers
+                                
+                                
+                                )  # fixme
     
-    device = 'cuda'
+    lr = config.learning_rate
+    
+    if torch.cuda.is_available():
+        device = 'cuda'
+    else:
+        device = 'cpu'
+    print('Currently using: ', device)
 
-    model.to(device)
+    model = model.to(device)
     # Setup the loss and optimizer
     criterion = torch.nn.CrossEntropyLoss()  # fixme
-    optimizer = torch.optim.Adam(model.parameters(), lr = config.learning_rate, amsgrad = True)  # fixme
+    #optimizer = torch.optim.Adam(model.parameters(), lr = config.learning_rate, amsgrad = True)  # fixme
+    #optimizer = torch.optim.Adam(model.parameters(), lr = lr, amsgrad = True)
+    acc_list = []
+    loss_list = []
     
-    count = 0
+    test_batches_in = []
+    test_batches_ta = []
     
-    train_list_in = []
-    train_list_ta = []
+    test_acc = []
     
-    test_list_in = []
-    test_list_ta = []
+    best_accuracy = 0
     
-    #for step, (batch_inputs, batch_targets) in enumerate(data_loader):
-    #    print(step, len(train_list_in))
-    #    if count%10 == 0:
-    #        test_list_in.append(batch_inputs)
-    #        test_list_ta.append(batch_targets)
-    #    else:
-    #        train_list_in.append(batch_inputs)
-    #        train_list_ta.append(batch_targets)
-    #    count += 1
-    #    if len(train_list_in) == 200:
-    #        break
-    #return test_list_in
-    #print(len(train_list_in), len(train_list_ta), len(test_list_in), len(test_list_ta))
-    #return 'a'
-    for step, (batch_inputs, batch_targets) in enumerate(data_loader):
+    
+    ### Flag for temperature
+    temp = True
+    temp_value = 2
+    
+    for runs in range(3):
+        optimizer = torch.optim.RMSprop(model.parameters(), lr = lr)
         
-        
-        
-        if step % config.print_every != 0 or step == 0:
+        for step, (batch_inputs, batch_targets) in enumerate(data_loader):
+            
+            
+            if step % config.print_every != 0 or step == 0:
 
-            t1 = time.time()
-            #print(type(step))
-            
-            
-            model.train()
-            
-            #######################################################
-            torch.nn.utils.clip_grad_norm(model.parameters(), max_norm=config.max_norm)
-            
-            optimizer.zero_grad()
-            
-            
-            batch_inputz = torch.stack(batch_inputs).to(device)
-            batch_input = batch_inputz.transpose(1,0).to(device)
-            
-            
-            zerox = torch.zeros(batch_input.shape[0],
-                            batch_input.shape[1],
-                            dataset.vocab_size).to(device)
-        
-            zerox.scatter_(2,batch_input.unsqueeze(2),1).to(device)
-
-            output = model.forward(zerox).to(device)
-            #print(output[1])
-            targets = torch.stack(batch_targets).to(device)
+                t1 = time.time()
+                
+                #######################################################
+                torch.nn.utils.clip_grad_norm(model.parameters(), max_norm=config.max_norm)
     
-            output_indices = torch.argmax(output, dim=2).to(device)
-            output =  output.transpose(0,1).transpose(1,2).to(device)
-            #print(output.shape)
-            loss_for_backward = criterion(output,targets).to(device)
-            #print(targets.shape)
-            #return 'a'
-            loss_for_backward.backward()
-            optimizer.step()
-            
-            correct_indices = output_indices == targets.transpose(0,1).to(device)
-            
-            #return correct_indices
-            #######################################################
+                
+                zerox = create_zerox(batch_inputs, dataset.vocab_size, device)
+                    
+                
+                output, _ = model.forward(zerox)#.to(device)
     
-            #loss = criterion.forward(output, targets)
+    
+                targets = torch.stack(batch_targets).to(device)
         
-            
-            #accuracy = int(sum(sum(correct_indices)))/int(correct_indices.shape[0]*
-            #correct_indices.shape[1])
-            #print(type(accuracy),type(loss))
-            # Just for time measurement
-            t2 = time.time()
-            examples_per_second = config.batch_size/float(t2-t1)
+                output_indices = torch.argmax(output, dim=2).to(device)
+                
+                output =  output.transpose(0,1).transpose(1,2).to(device)
+                
+                loss_for_backward = criterion(output.transpose(0,2),targets.t()).to(device)
+    
+                optimizer.zero_grad()
+                loss_for_backward.backward()
+                optimizer.step()
+                
+                correct_indices = output_indices == targets.transpose(0,1).to(device)
 
-        if step % config.print_every == 0 and step != 0:
+                #######################################################
+
+                t2 = time.time()
+                examples_per_second = config.batch_size/float(t2-t1)
+    
+            if step % config.print_every == 0 and step != 0:
+                #model.eval()
+                
+                zerox = create_zerox(batch_inputs, dataset.vocab_size, device)
+    
+                output, _ = model.forward(zerox)
+                
+                output_indices = torch.argmax(output, dim=2).to(device)
+                
+                output =  output.transpose(0,1).transpose(1,2).to(device)
+                targets = torch.stack(batch_targets).to(device)
+
+                loss_for_backward = criterion(output.transpose(0,2),targets.t()).to(device)
+                correct_indices = output_indices == targets.transpose(0,1)#.to(device)
+                accuracy = np.array(correct_indices.detach().cpu()).mean()
+                
+                
+                
+                
+                print("[{}] Train Step {:04d}/{:f}, Batch Size = {}, Examples/Sec = {:.2f}, "
+                      "Accuracy = {:.2f}, Loss = {:.3f}".format(
+                        datetime.now().strftime("%Y-%m-%d %H:%M"), step,
+                        config.train_steps, config.batch_size, examples_per_second,
+                        accuracy,
+                        loss_for_backward
+                ))
+                acc_list.append(accuracy)
+                loss_list.append(float(loss_for_backward))
+                
+                if accuracy > best_accuracy:
+                    torch.save({'model_state_dict': model.state_dict(),
+            'optimizer_state_dict': optimizer.state_dict()},'model.pth' )
+                
+                
+    
+            if step % config.sample_every == 0:
+                # Generate some sentences by sampling from the model
+                ## Generate a good sample instead of the same one over and over again
+                #model.eval()
+                
+                ### Append every modulo batch to a list of test batches and run 
+                ### over that list to test
+                
+                zerox = create_zerox(batch_inputs, dataset.vocab_size, device)
+                
+                test_batches_in.append(zerox)
+                
+                targets = torch.stack(batch_targets).to(device)
+                
+                test_batches_ta.append(targets)
+                
+                batch_inputz = torch.stack(batch_inputs).to(device)
+                batch_input = batch_inputz.transpose(1,0).to(device)
+                
+                output,_ = model.forward(zerox)#.to(device)
+                output_indices = torch.argmax(output, dim=2).to(device)
+                output =  output.transpose(0,1).transpose(1,2).to(device)
+    
+                loss_for_backward = criterion(output,targets).to(device)
+                correct_indices = output_indices == targets.transpose(0,1).to(device)
+                
+                best_sample = np.argmax(np.asarray(sum(correct_indices.t().detach().cpu())))
+                print('Real: ', dataset.convert_to_string(np.asarray(batch_input[best_sample].cpu())))
+                output,_ = model.forward(zerox)#.to(device)
+                output_indices = torch.argmax(output, dim=2).to(device)
+                print('prediction: ', dataset.convert_to_string(np.asarray(output_indices[best_sample].cpu())))
+                
+                bc = int(sum(correct_indices.t().detach().cpu())[best_sample])/config.seq_length
+                print('This sample had:',bc,'characters right')
+                
+                output = np.random.randint(dataset.vocab_size)
+                letters = [output]
+                
+                
+                greedy_output = np.random.randint(dataset.vocab_size)
+                greedy_letters = [greedy_output]
+                
+                
+                Temperature_time(runs, step, dataset, device, model)
+                for i in range(config.seq_length-1):
+                    
+                    #if temp:
 # =============================================================================
-#             acc_list = []
-#             for i in range(len(test_list_in)):
-#                 batch_inputz = torch.stack(test_list_in[i]).to(device)
-#                 batch_input = batch_inputz.transpose(1,0).to(device)
-#             
-#             
-#                 zerox = torch.zeros(batch_input.shape[0],
-#                             batch_input.shape[1],
-#                             dataset.vocab_size).to(device)
-#         
-#                 zerox.scatter_(2,batch_input.unsqueeze(2),1).to(device)
-#                 
-#                 output = model.forward(zerox).to(device)
-#                 targets = torch.stack(test_list_ta[i]).to(device)
-#         
-#                 output_indices = torch.argmax(output, dim=2).to(device)
-#                 output =  output.transpose(0,1).transpose(1,2).to(device)
-#                 correct_indices = output_indices == targets.transpose(0,1).to(device)
-#                 accuracy = int(sum(sum(correct_indices)))/int(correct_indices.shape[0]*
-#                               correct_indices.shape[1])
-#                 acc_list.append(accuracy)
+#                         
+#                         soft = torch.nn.Softmax(dim=2)
+#                         
+#                         
+#                         
+#                         
+#                         zerol = torch.zeros([1,1,dataset.vocab_size])
+#                         one_hot_letter = torch.tensor(output).unsqueeze(-1).unsqueeze(-1).unsqueeze(-1)
+#                         zerol.scatter_(2,one_hot_letter,1)
+#                         zerol = zerol.to(device)
+#                         if i == 0:
+#                             output, h = model.forward(zerol)
+#     
+#                         else:
+#                             output, h = model.forward(zerol, h)
+#                         
+#                         tempered = soft(output/temp_value)
+#                         #print(tempered)
+#                         output = int(torch.multinomial(tempered[0][0],1).detach().cpu())
+#                         #print(output)
+#                         letters.append(output)
 # =============================================================================
-            model.eval()
+                    
+                    greedy_zerol = torch.zeros([1,1,dataset.vocab_size])
+                    greedy_one_hot_letter = torch.tensor(greedy_output).unsqueeze(-1).unsqueeze(-1).unsqueeze(-1)
+                    greedy_zerol.scatter_(2,greedy_one_hot_letter,1)
+                    greedy_zerol = greedy_zerol.to(device)
+                    
+                    if i == 0:
+                        greedy_output, greedy_h = model.forward(greedy_zerol)
+                    else:
+                        greedy_output, greedy_h = model.forward(greedy_zerol, greedy_h)
+                        
+                    greedy_output = int(torch.argmax(greedy_output, dim=2).detach().cpu())
+                    greedy_letters.append(greedy_output)
+    
+                print('Greedy Generation ', dataset.convert_to_string(greedy_letters))
+                abs_step = (runs*10000) + step
+                line = ' '.join(('Step:',str(abs_step),dataset.convert_to_string(letters)))
             
-            batch_inputz = torch.stack(batch_inputs).to(device)
-            batch_input = batch_inputz.transpose(1,0).to(device)
             
-            
-            zerox = torch.zeros(batch_input.shape[0],
-                            batch_input.shape[1],
-                            dataset.vocab_size).to(device)
+                with open('GreedyGeneration.txt', 'a') as file:
+                              file.write(line + '\n')
+                
+                
+                
+    # =============================================================================
+    #         if step % (config.sample_every*1000) ==0:
+    #             avg = []
+    #             print('Testing over ', len(test_batches_in), 'batches')
+    #             for z in range(len(test_batches_in)):
+    #                 ##OUTPUT
+    #                 output,_ = model.forward(test_batches_in[z])
+    #                 output_indices = torch.argmax(output, dim=2).to(device)
+    #                 output =  output.transpose(0,1).transpose(1,2).to(device)
+    #                 
+    #                 ##LOSS AND ACCURACY
+    #                 loss_for_backward = criterion(output,targets).to(device)
+    #                 correct_indices = output_indices == test_batches_ta[z].transpose(0,1).to(device)
+    #                 
+    #                 accuracy = int(sum(sum(correct_indices)))/int(correct_indices.shape[0]*
+    #                               correct_indices.shape[1])
+    #                 
+    #                 avg.append(accuracy)
+    #                 
+    #             this_test_acc = sum(avg)/len(avg)
+    #             print('The test accuracy over ',len(test_batches_in), 'is: ', this_test_acc)
+    #             test_acc.append(this_test_acc)
+    #             #if bc > 0.8:
+    #             #    print(bc)
+    #             #    #return correct_indices
+    #             
+    # =============================================================================
+            if step == config.train_steps:
+                # If you receive a PyTorch data-loader error, check this bug report:
+                # https://github.com/pytorch/pytorch/pull/9655
+                break
+        print('Done training.')
+        line = ' '.join(('Test accuracy:',str(test_acc.append),'Learning rate:',str(lr),'Accuracy:',str(acc_list),'Loss:',str(loss_list)))
+        with open('textresults.txt', 'a') as file:
+                              file.write(line + '\n')
         
-            zerox.scatter_(2,batch_input.unsqueeze(2),1).to(device)
-
-            output = model.forward(zerox).to(device)
-            output_indices = torch.argmax(output, dim=2).to(device)
-            output =  output.transpose(0,1).transpose(1,2).to(device)
-            targets = torch.stack(batch_targets).to(device)
-            
-            
-            loss_for_backward = criterion(output,targets).to(device)
-            correct_indices = output_indices == targets.transpose(0,1).to(device)
-            
-            #accuracy = sum(acc_list) / len(acc_list)
-            accuracy = int(sum(sum(correct_indices)))/int(correct_indices.shape[0]*
-            correct_indices.shape[1])
-            
-            print("[{}] Train Step {:04d}/{:f}, Batch Size = {}, Examples/Sec = {:.2f}, "
-                  "Accuracy = {:.2f}, Loss = {:.3f}".format(
-                    datetime.now().strftime("%Y-%m-%d %H:%M"), step,
-                    config.train_steps, config.batch_size, examples_per_second,
-                    accuracy,
-                    loss_for_backward
-            ))
-
-        if step % config.sample_every == 0:
-            # Generate some sentences by sampling from the model
-            ## Generate a good sample instead of the same one over and over again
-            model.eval()
-            
-            batch_inputz = torch.stack(batch_inputs).to(device)
-            batch_input = batch_inputz.transpose(1,0).to(device)
-            zerox = torch.zeros(batch_input.shape[0],
-                            batch_input.shape[1],
-                            dataset.vocab_size).to(device)
-            zerox.scatter_(2,batch_input.unsqueeze(2),1).to(device)
-            output = model.forward(zerox).to(device)
-            output_indices = torch.argmax(output, dim=2).to(device)
-            output =  output.transpose(0,1).transpose(1,2).to(device)
-            targets = torch.stack(batch_targets).to(device)
-            loss_for_backward = criterion(output,targets).to(device)
-            correct_indices = output_indices == targets.transpose(0,1).to(device)
-            
-            best_sample = np.argmax(np.asarray(sum(correct_indices.t().detach().cpu())))
-            print('Real: ', dataset.convert_to_string(np.asarray(batch_input[best_sample].cpu())))
-            output = model.forward(zerox).to(device)
-            output_indices = torch.argmax(output, dim=2).to(device)
-            print('prediction: ', dataset.convert_to_string(np.asarray(output_indices[best_sample].cpu())))
-            
-            bc = int(sum(correct_indices.t().detach().cpu())[best_sample])/config.seq_length
-            if bc > 0.8:
-                print(bc)
-                return correct_indices
-            
-            print('This sample had:',bc,'characters right')
-        if step == config.train_steps:
-            # If you receive a PyTorch data-loader error, check this bug report:
-            # https://github.com/pytorch/pytorch/pull/9655
-            break
-
-    print('Done training.')
-
-
+        #hiddenstates = [None]*30
+        output = np.random.randint(dataset.vocab_size)
+        letters = [output]
+        for i in range(400):
+                zerol = torch.zeros([1,1,dataset.vocab_size])
+                one_hot_letter = torch.tensor(output).unsqueeze(-1).unsqueeze(-1).unsqueeze(-1)
+                zerol.scatter_(2,one_hot_letter,1)
+                zerol = zerol.to(device)
+                if i == 0:
+                    output, h = model.forward(zerol)
+                    
+                    output = int(torch.argmax(output, dim=2).detach().cpu())
+                    
+                    
+                    letters.append(output)
+                    #hiddenstates[i] = h
+                else:
+                    output, h = model.forward(zerol, h)
+                    
+                    output = int(torch.argmax(output, dim=2).detach().cpu())
+                    
+                    letters.append(output)
+                    #hiddenstates[i % 30] = h
+        print('Final generation: ', dataset.convert_to_string(letters))
+    line = ' '.join(('Accuracy:',str(acc_list),'Loss', str(loss_list)))
+    with open('PrideAndPrejudice2.txt', 'a') as file:
+                          file.write(line + '\n')       
  ################################################################################
  ################################################################################
 
@@ -247,8 +381,9 @@ if __name__ == "__main__":
     parser.add_argument('--lstm_num_layers', type=int, default=2, help='Number of LSTM layers in the model')
 
     # Training params
-    parser.add_argument('--batch_size', type=int, default=32, help='Number of examples to process in a batch')
-    parser.add_argument('--learning_rate', type=float, default=0.003, help='Learning rate')
+    parser.add_argument('--batch_size', type=int, default=64, help='Number of examples to process in a batch')
+    
+    parser.add_argument('--learning_rate', type=float, default=0.005, help='Learning rate')
 
     # It is not necessary to implement the following three params, but it may help training.
     parser.add_argument('--learning_rate_decay', type=float, default=0.96, help='Learning rate decay fraction')
@@ -261,9 +396,10 @@ if __name__ == "__main__":
     # Misc params
     parser.add_argument('--summary_path', type=str, default="./summaries/", help='Output path for summaries')
     parser.add_argument('--print_every', type=int, default=100, help='How often to print training progress')
-    parser.add_argument('--sample_every', type=int, default=100, help='How often to sample from the model')
+    parser.add_argument('--sample_every', type=int, default=250, help='How often to sample from the model')
 
     config = parser.parse_args()
 
     # Train the model
     train(config)
+
