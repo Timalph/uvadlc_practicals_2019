@@ -119,4 +119,4 @@ class LSTM(nn.Module):
         softy = torch.nn.Softmax()
         y = softy(p)
         
-        return p.transpose(0,1)
+        return y.transpose(0,1)
