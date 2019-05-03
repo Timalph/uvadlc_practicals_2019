@@ -1,0 +1,127 @@
+Initialize dataset with 684742 characters, 76 unique.
+Currently using:  cuda
+C:/Users/tim/Documents/Master/Year 1/Semester 2/DL/2/uvadlc_practicals_2019/assignment_2/part2/train_cuda.py:165: UserWarning: torch.nn.utils.clip_grad_norm is now deprecated in favor of torch.nn.utils.clip_grad_norm_.
+  torch.nn.utils.clip_grad_norm(model.parameters(), max_norm=config.max_norm)
+Real:  e your plans in favour of the 
+prediction:                                
+This sample had: 0.23333333333333334 characters right
+ZS,e e   et e   i
+    waie eii
+wA8i  urd,ilriwiddatiais  
+twl
+31!6luencnn
+eleu
+(de riedfdmet
+Greedy Generation  m                             
+Real:   that Mr.
+Darcy did not wish f
+prediction:  thet hr. Barcy hid not bish to
+This sample had: 0.7666666666666667 characters right
+g produce of many something of
+Us struck; I but it? Her it, e
+ other, of
+predulation beyon f
+Greedy Generation  _ soon afterwards the consider
+Real:  
+
+“Oh! Jane,” cried Elizabeth,
+prediction:  ““Ih! mane   sried Elizabeth, 
+This sample had: 0.8 characters right
+I am sure I am sure I should h
+Elizabeth, quite
+decide before
+;; Newanch. Focraking
+yise inq
+Greedy Generation  ; and the present distressed t
+Done training.
+Final generation:  Collinse with a smile of my life.”
+
+This is a moment.
+
+“I would been so far fursting them all.”
+
+“I am all.”
+
+“I would been so far fursting them all.”
+
+“I am all.”
+
+“I would been so far fursting them all.”
+
+“I am all.”
+
+“I would been so far fursting them all.”
+
+“I am all.”
+
+“I would been so far fursting them all.”
+
+“I am all.”
+
+“I would been so far fursting them all.”
+
+“I am all.”
+
+“I would been so
+Real:  ubject of your reverie.”
+
+“I s
+prediction:  sject of tour oeser n  
+
+“I sh
+This sample had: 0.7333333333333333 characters right
+Ver sat arring of shall have s
+1 from my of the nather had ng
+yes', be fakooks; s', you catl
+Greedy Generation  3
+
+“your sat at the lass of th
+Real:  been so fortunate as to meet M
+prediction:  etn ao fartunate as to maet hr
+This sample had: 0.8 characters right
+52
+
+
+Nother revolt so much as 
+--of either extravagance. Her 
+21anc by referred fix to step,
+Greedy Generation  The subject of her daughters a
+Real:  question, and the
+gentlemen di
+prediction:  uint ons and the gentlemen aid
+This sample had: 0.8 characters right
+(Elizabeth was determined to b
+0
+
+
+Chapter Lucas, “his
+highly
+(By. cearance answer people
+br
+Greedy Generation  (in the same time that the pre
+Done training.
+Final generation:  f them all them all, so it was not married before them all, so it was not married before them all, so it was not married before them all, so it was not married before them all, so it was not married before them all, so it was not married before them all, so it was not married before them all, so it was not married before them all, so it was not married before them all, so it was not married before 
+Real:  f delight.
+
+When they left the
+prediction:   tilight  
+When the  aaft hhe 
+This sample had: 0.7333333333333333 characters right
+Upon assure which his naturall
+f I fat of it at that shortlig
+Y”. 'Lrsd this
+couning,  husp 
+Greedy Generation  Charly and sist at an agt it i
+
+
+
+
+Step: 0 H
+Step: 5000 _
+Step: 10000 D
+Step: 10000 2
+Step: 15000  
+Step: 20000 m
+Step: 20000 N
+Step: 25000 3
+Step: 30000 2

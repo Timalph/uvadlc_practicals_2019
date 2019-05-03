@@ -88,10 +88,13 @@ def train(config, inp_len):
 
         optimizer.zero_grad()
         
+        
         output_indices = torch.argmax(output.transpose(0,1), dim=0)
+        
+
         loss_for_backward = criterion(output,batch_targets).to(device)
         loss_for_backward.backward()
-        
+        return output_indices
         ############################################################################
         # QUESTION: what happens here and why?
         ############################################################################

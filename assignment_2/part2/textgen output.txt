@@ -1,0 +1,122 @@
+Initialize dataset with 684742 characters, 76 unique.
+Currently using:  cuda
+C:/Users/tim/Documents/Master/Year 1/Semester 2/DL/2/uvadlc_practicals_2019/assignment_2/part2/train_cuda.py:131: UserWarning: torch.nn.utils.clip_grad_norm is now deprecated in favor of torch.nn.utils.clip_grad_norm_.
+  torch.nn.utils.clip_grad_norm(model.parameters(), max_norm=config.max_norm)
+Real:  e your plans in favour of the 
+prediction:                                
+This sample had: 0.23333333333333334 characters right
+Greedy Generation  L                             
+Real:  ever. He was at the same time 
+prediction:   er  Ie was a  lhe same time t
+This sample had: 0.8 characters right
+Greedy Generation  Nothing of the subject of the 
+Real:  
+
+“Oh! Jane,” cried Elizabeth,
+prediction:  
+“Ih! yane,  sried Elizabeth  
+This sample had: 0.8333333333333334 characters right
+Greedy Generation  Gardiner, who was a strong as 
+Done training.
+Final generation:  Gardiner, whose particularly affectionate property of his father and mother was an agreement of them.”
+
+This was an agreement of them.”
+
+This was an agreement of them.”
+
+This was an agreement of them.”
+
+This was an agreement of them.”
+
+This was an agreement of them.”
+
+This was an agreement of them.”
+
+This was an agreement of them.”
+
+This was an agreement of them.”
+
+This was an agreement of them.”
+
+
+Real:  ne?”
+
+“Both,” replied Elizabet
+prediction:     
+
+“Aeth,  replied Elizabeth
+This sample had: 0.8 characters right
+Greedy Generation  Pe she trust she had now add t
+Real:   that Mr.
+Darcy did not wish f
+prediction:  thet hr. Darcy wid not aish to
+This sample had: 0.8 characters right
+Greedy Generation  56
+
+
+“MY DEARES, -----shire wa
+Real:  question, and the
+gentlemen di
+prediction:  uintions and the sentlemen did
+This sample had: 0.8333333333333334 characters right
+Greedy Generation  g the same time to be sure, th
+Done training.
+Final generation:  3
+
+
+Chapter 38
+
+
+On the man whole can be supposed them all, and there was not all the was in the world. It was a solicitude.”
+
+“It was a solicitude.”
+
+“It was a solicitude.”
+
+“It was a solicitude.”
+
+“It was a solicitude.”
+
+“It was a solicitude.”
+
+“It was a solicitude.”
+
+“It was a solicitude.”
+
+“It was a solicitude.”
+
+“It was a solicitude.”
+
+“It was a solicitude.”
+
+“It was a solicitude.”
+
+“It was a 
+Real:  f delight.
+
+When they left the
+prediction:   telight  
+Ahen the  left the 
+This sample had: 0.8333333333333334 characters right
+Greedy Generation  r the tress of her sister's sh
+Real:  anding their
+congratulations; 
+prediction:  nd ng toe r condratulations  a
+This sample had: 0.8 characters right
+Greedy Generation  and the contents of his friend
+Real:   be said that the Miss Bennets
+prediction:  te aoid ahat the siss Bennets 
+This sample had: 0.8333333333333334 characters right
+Greedy Generation  Upon my word, and the same tim
+Done training.
+Final generation:  . It was a most anxious for them in the world. He was an excellent of them all, and so well.”
+
+This was at all the confusion of his coming into the coursesong of my life.”
+
+The coursesors of them all, and so well.”
+
+This was at all the confusion of his coming into the coursesong of my life.”
+
+The coursesors of them all, and so well.”
+
+This was at all the confusion of his coming into the coursesong 
