@@ -35,7 +35,7 @@ from lstm import LSTM
 
 ################################################################################
 
-def train(config, inp_len):
+def train(config):
 
     assert config.model_type in ('RNN', 'LSTM')
 
@@ -46,7 +46,7 @@ def train(config, inp_len):
         device = 'cpu'
     print('Currently using: ', device)
     # Initialize the model that we are going to use
-    input_length = inp_len
+    input_length = config.input_length
     input_dim = config.input_dim
     num_classes = config.num_classes
     num_hidden = config.num_hidden
@@ -163,5 +163,4 @@ if __name__ == "__main__":
     config = parser.parse_args()
 
     # Train the model
-    for inp_len in [5]:
-        train(config, inp_len)
+    train(config

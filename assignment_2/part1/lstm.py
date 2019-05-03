@@ -71,8 +71,7 @@ class LSTM(nn.Module):
 
     def forward(self, x):
         # Implementation here ...
-        #print(x.shape)
-        #x = x.double()
+
         for i in range(self.seq_length):
             #print(i)
 
@@ -94,7 +93,6 @@ class LSTM(nn.Module):
                 self.h = self.tan(self.c) * self.o
 
                 self.h_prev = (self.Whx @ x[i].unsqueeze(0)) + (self.Whh @ self.Whinit) + self.bh
-                #print(self.h_prev.shape)
                 self.h_prev = self.tan(self.h_prev)
             else:
                 self.g = (self.Wgx @x[i].unsqueeze(0)) + (self.Wgh @ self.h) + self.bg
@@ -110,13 +108,10 @@ class LSTM(nn.Module):
                 
                 self.c = (self.g * self.i) + (self.c * self.f)
                 self.h = self.tan(self.c) * self.o
-        #print(self.h_prev.shape)
-        #print(self.Wph.shape)
-        #print((self.Wph @ self.h_prev).transpose(0,1).shape)
-        #print(self.bp.shape)
+
         p = (self.Wph @ self.h) + self.bp
         
-        softy = torch.nn.Softmax()
-        y = softy(p)
+        #softy = torch.nn.Softmax()
+        #y = softy(p)
         
-        return y.transpose(0,1)
+        return p.transpose(0,1)
